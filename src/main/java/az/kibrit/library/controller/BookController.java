@@ -1,9 +1,12 @@
 package az.kibrit.library.controller;
-import az.kibrit.library.model.entity.Book;
+import az.kibrit.library.dto.BookDTO;
 import az.kibrit.library.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -14,31 +17,32 @@ public class BookController {
     private BookService bookService;
 
     @PostMapping
-    public Book createBook(@Validated @RequestBody Book book) {
-        return bookService.createBook(book);
+    public ResponseEntity<BookDTO> createBook(@Valid @RequestBody BookDTO bookDTO) {
+        BookDTO savedBook = bookService.createBook(bookDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BookDTO> getBookById(@PathVariable @Min(1) Long id) {
+        BookDTO bookDTO = bookService.getBookById(id);
+        return ResponseEntity.ok(bookDTO);
     }
 
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookService.getAllBooks();
+    public ResponseEntity<List<BookDTO>> getAllBooks() {
+        List<BookDTO> bookDTOs = bookService.getAllBooks();
+        return ResponseEntity.ok(bookDTOs);
     }
 
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody Book books) {
-        return bookService.updateBook(id, books);
+    public ResponseEntity<BookDTO> updateBook(@Valid @PathVariable Long id, @RequestBody BookDTO bookDTO) {
+        BookDTO updatedBook = bookService.updateBook(id, bookDTO);
+        return ResponseEntity.ok(updatedBook);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBook(@PathVariable @Min(1) Long id) {
         bookService.deleteBook(id);
-    }
-
-    @GetMapping("/search")
-    public List<Book> searchBooks(@RequestParam(required = false) String authorName,
-                                  @RequestParam(required = false) String genre,
-                                  @RequestParam(required = false) Integer year,
-                                  @RequestParam(required = false) Integer rate,
-                                  @RequestParam(required = false) String language) {
-        return bookService.findBooksByCriteria(authorName, genre, year, rate, language);
+        return ResponseEntity.noContent().build();
     }
 }
